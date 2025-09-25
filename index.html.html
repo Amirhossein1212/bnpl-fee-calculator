@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>کارمزد BNPL</title>
+  <style>
+    body { font-family: 'Tahoma', sans-serif; background:#f8fafc; direction:rtl; padding:20px; margin:0; }
+    h1 { font-size:24px; margin:20px; }
+    .container { padding:20px; }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:20px; margin-bottom:20px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.05); }
+    .row { margin:15px 0; display:flex; align-items:center; gap:10px; }
+    label { display:inline-block; min-width:200px; font-size:14px; color:#374151; }
+    input[type=number], input[type=range] { padding:6px; border-radius:8px; border:1px solid #d1d5db; }
+    .range-container { display:flex; align-items:center; gap:10px; width:100%; }
+    .range-container input[type=range] { flex:1; }
+    .grid { display:grid; grid-template-columns: 1fr 1px 1fr; gap:20px; align-items:start; }
+    .divider { background:#e5e7eb; width:1px; }
+    .results-container { display:flex; gap:20px; flex-wrap:wrap; }
+    .results-container .card { flex:1; min-width:320px; }
+    .result-label { font-size:14px; color:#6b7280; margin-top:8px; }
+    .result-value { font-size:18px; font-weight:bold; margin-top:4px; }
+    .result-highlight { font-size:20px; font-weight:bold; color:#2563eb; margin-top:8px; }
+    .result-highlight-green { font-size:20px; font-weight:bold; color:#059669; margin-top:8px; }
+    .muted { color:#6b7280; font-size:12px; }
+  </style>
+</head>
+<body>
+  <h1>ماشین‌حساب کارمزد BNPL</h1>
+  <div class="container">
+
+  <!-- Inputs Section -->
+  <div class="card">
+    <h2>ورودی‌ها</h2>
+    <div class="grid">
+      <!-- ستون راست -->
+      <div>
+        <div class="row">
+          <label for="baseFee">سقف کارمزد (%):</label>
+          <input id="baseFee" type="number" step="0.01" min="0" max="100" value="4.68" />
+        </div>
+        <div class="row">
+          <label for="coc">نرخ سالانه COC (%):</label>
+          <input id="coc" type="number" step="2" min="0" max="100" value="42" />
+        </div>
+        <div class="row">
+          <label for="targetDays">بازه‌ی تسویه (روز):</label>
+          <div class="range-container">
+            <input id="targetDays" type="range" min="0" max="30" step="1" value="0" />
+            <span id="targetDaysLabel">0 روز</span>
+          </div>
+        </div>
+        <div class="row">
+          <label for="essentialShare">سهم کالاهای اساسی از خرید (%):</label>
+          <div class="range-container">
+            <input id="essentialShare" type="range" min="0" max="100" step="1" value="26" />
+            <span id="essentialShareLabel">26%</span>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <!-- ستون چپ -->
+      <div>
+        <div class="row">
+          <label>مجموع اعتبار اعطایی (میلیارد تومان):</label>
+          <div class="range-container">
+            <input id="totalCredit" type="range" min="0" max="18000" step="100" value="18000" />
+            <input id="totalCreditNum" type="number" min="0" max="18000" step="10" value="18000" />
+          </div>
+        </div>
+        <div class="row">
+          <label>درصد وام بلاعوض از کل اعتبار (%):</label>
+          <div class="range-container">
+            <input id="grantPct" type="range" min="0" max="100" step="1" value="0" />
+            <input id="grantPctNum" type="number" min="0" max="100" step="1" value="0" />
+          </div>
+        </div>
+        <div class="row">
+          <label>وام بلاعوض (میلیارد تومان):</label>
+          <div><span id="grantAbsLabel">0</span> <span class="muted">میلیارد</span></div>
+        </div>
+        <div class="row">
+          <label>کف مبلغ قرارداد (میلیارد تومان):</label>
+          <div class="range-container">
+            <input id="varThreshold" type="range" min="0" max="200" step="10" value="200" />
+            <input id="varThresholdNum" type="number" min="0" max="200" step="1" value="200" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="results-container">
+    <div class="card">
+      <h2>سقف کارمزد</h2>
+      <div class="result-label">هزینه فرصت بازه‌ی تسویه (<span id="daysComp">—</span>):</div>
+      <div class="result-value" id="timeCostComp">—</div>
+      <div class="result-label">کارمزد نقدی متناظر:</div>
+      <div class="result-highlight" id="equivComp">—</div>
+      <div class="result-label">جمع:</div>
+      <div class="result-value" id="sumComp">—</div>
+    </div>
+    <div class="card">
+      <h2>کف کارمزد</h2>
+      <div class="result-label">هزینه فرصت بازه‌ی تسویه (<span id="daysFloor">—</span>):</div>
+      <div class="result-value" id="timeCostFloor">—</div>
+      <div class="result-label">کارمزد نقدی متناظر:</div>
+      <div class="result-highlight-green" id="equivFloor">—</div>
+      <div class="result-label">جمع:</div>
+      <div class="result-value" id="sumFloor">—</div>
+    </div>
+  </div>
+
+  </div>
+
+<script>
+function timeCostSimpleMonthly(cocAnnual, days) {
+  const monthlyRate = cocAnnual / 12;
+  return monthlyRate * (days/30);
+}
+function fmtPct(x){ if(!Number.isFinite(x)) return "—"; const val = Math.ceil(x*10000)/100; return val.toFixed(2) + "%"; }
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+function adjustCash(baseFeeDec, s){
+  const slope1 = 0.000325;
+  const slope2 = 0.00032;
+  let delta = 0;
+  if (s > 26){
+    if (s <= 30){
+      delta = -(s - 26) * slope1;
+    } else if (s <= 35){
+      delta = -(30 - 26) * slope1 - (s - 30) * slope2;
+    } else {
+      delta = -(30 - 26) * slope1 - (35 - 30) * slope2 - (s - 35) * slope2;
+    }
+  } else if (s < 26){
+    delta = +(26 - s) * slope1;
+  }
+  const adjusted = baseFeeDec + delta;
+  return Math.max(adjusted, 0);
+}
+
+let initialized = false;
+function recalc(){
+  const coc = (parseFloat(document.getElementById('coc').value)||0)/100;
+  const baseFeeInputPct = parseFloat(document.getElementById('baseFee').value)||0;
+  const days = parseInt(document.getElementById('targetDays').value)||0;
+  const shareInput = document.getElementById('essentialShare');
+  let share = parseInt(shareInput.value)||0;
+
+  const totalCredit = parseFloat(document.getElementById('totalCredit').value)||0; // bln
+  const grantPct = parseFloat(document.getElementById('grantPct').value)||0; // percent
+  const grantAbs = totalCredit * (grantPct/100.0); // bln absolute
+
+  // init defaults
+  if(!initialized){
+    share = 26; shareInput.value = 26;
+    initialized = true;
+  }
+
+  // sync labels
+  document.getElementById('targetDaysLabel').textContent = days + " روز";
+  document.getElementById('essentialShareLabel').textContent = share + "%";
+  document.getElementById('grantAbsLabel').textContent = Math.round(grantAbs);
+
+  // --- Ceiling logic (same as v35) ---
+  const baseTC_anchor = timeCostSimpleMonthly(coc, 20);
+  const targetTC_simple = timeCostSimpleMonthly(coc, days);
+
+  let baseCashBase = (baseFeeInputPct/100) - baseTC_anchor;
+  if (baseCashBase < 0) baseCashBase = 0;
+
+  const baseCashAdj = adjustCash(baseCashBase, share);
+  const equiv_comp = baseCashAdj + baseTC_anchor - targetTC_simple;
+
+  // --- Floor logic: gap from drivers ---
+  const refThreshold = 200;
+
+  // A) Gap from total credit: at 1000 => 2% drop, at 18000 => 0
+  const refMinCredit = 1000.0;
+  const refMaxCredit = 18000.0;
+  const norm = clamp((refMaxCredit - Math.max(totalCredit, refMinCredit)) / (refMaxCredit - refMinCredit), 0, 1);
+  const gap_credit_raw = 0.02 * norm; // up to 2%
+
+  // B) Grant offset: proportional. At 1000 grantAbs => full 2% offset
+  const offset = Math.min(grantAbs / 1000.0, 1.0) * 0.02;
+
+  const gap_credit = Math.max(gap_credit_raw - offset, 0);
+
+  // C) Threshold gap (unchanged): up to 0.45% from 200 -> 0
+  const threshold = parseFloat(document.getElementById('varThreshold').value)||0;
+  const gap_threshold = (200 - Math.min(threshold, refThreshold)) * 0.0000225; // 0.45% max
+
+  const gap = gap_credit + gap_threshold;
+
+  const equiv_floor = Math.max(equiv_comp - gap, 0);
+
+  // Render
+  document.getElementById('daysComp').textContent = days + " روز";
+  document.getElementById('timeCostComp').textContent = fmtPct(targetTC_simple);
+  document.getElementById('equivComp').textContent = fmtPct(Math.max(equiv_comp,0));
+  document.getElementById('sumComp').textContent = fmtPct(Math.max(equiv_comp+targetTC_simple,0));
+
+  document.getElementById('daysFloor').textContent = days + " روز";
+  document.getElementById('timeCostFloor').textContent = fmtPct(targetTC_simple);
+  document.getElementById('equivFloor').textContent = fmtPct(equiv_floor);
+  document.getElementById('sumFloor').textContent = fmtPct(Math.max(equiv_floor+targetTC_simple,0));
+}
+
+function syncPair(idA, idB){
+  const a = document.getElementById(idA);
+  const b = document.getElementById(idB);
+  a.addEventListener('input', ()=>{ b.value = a.value; recalc(); });
+  b.addEventListener('input', ()=>{ a.value = b.value; recalc(); });
+}
+
+['baseFee','coc','targetDays','essentialShare','grantPct','varThreshold'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', recalc);
+});
+
+syncPair('totalCredit','totalCreditNum');
+syncPair('grantPct','grantPctNum');
+syncPair('varThreshold','varThresholdNum');
+
+recalc();
+</script>
+
+</body>
+</html>
